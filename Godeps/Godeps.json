@@ -31,6 +31,11 @@
 			"Rev": "31b736133b98f26d5e078ec9eb591666edfd091f"
 		},
 		{
+			"ImportPath": "github.com/coreos/go-iptables/iptables",
+			"Comment": "v0.2.0-8-g17b936e",
+			"Rev": "17b936e6ccb6f6e424f7d89c614164e796df1661"
+		},
+		{
 			"ImportPath": "github.com/coreos/go-oidc/http",
 			"Rev": "5644a2f50e2d2d5ba0b474bc5bc55fea1925936d"
 		},
@@ -126,7 +131,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/glog",
-			"Rev": "44145f04b68cf362d9c4df2182967c2275eaefed"
+			"Rev": "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
