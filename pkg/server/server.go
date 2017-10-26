@@ -6,8 +6,8 @@ import (
 	"net"
 	"net/http"
 
-	fcollector "github.com/dongyiyang/k8sconnection/pkg/flowcollector"
-	tcounter "github.com/dongyiyang/k8sconnection/pkg/transactioncounter"
+	fcollector "github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
+	tcounter "github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
 
 	"github.com/golang/glog"
 )

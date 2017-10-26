@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dongyiyang/k8sconnection/cmd/app"
-	"github.com/dongyiyang/k8sconnection/cmd/app/options"
+	"github.com/Hyperpilotio/k8sconntrack/cmd/app"
+	"github.com/Hyperpilotio/k8sconntrack/cmd/app/options"
 
 	"k8s.io/kubernetes/pkg/util/flag"
 	"k8s.io/kubernetes/pkg/util/logs"

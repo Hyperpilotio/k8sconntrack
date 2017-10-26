@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/dongyiyang/k8sconnection",
+	"ImportPath": "github.com/Hyperpilotio/k8sconntrack",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [

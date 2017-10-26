@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/dongyiyang/k8sconnection/pkg/conntrack"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/conntrack"
 )
 
 type FakeConnInfoBuilder struct {

@@ -8,11 +8,11 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	proxyconfig "k8s.io/kubernetes/pkg/proxy/config"
 
-	"github.com/dongyiyang/k8sconnection/cmd/app/options"
-	"github.com/dongyiyang/k8sconnection/pkg/conntrack"
-	"github.com/dongyiyang/k8sconnection/pkg/flowcollector"
-	"github.com/dongyiyang/k8sconnection/pkg/server"
-	"github.com/dongyiyang/k8sconnection/pkg/transactioncounter"
+	"github.com/Hyperpilotio/k8sconntrack/cmd/app/options"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/conntrack"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/server"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
 
 	"github.com/golang/glog"
 )

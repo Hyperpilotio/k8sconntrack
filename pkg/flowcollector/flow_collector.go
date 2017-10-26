@@ -7,7 +7,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 
-	"github.com/dongyiyang/k8sconnection/pkg/conntrack"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/conntrack"
 
 	"github.com/golang/glog"
 )
