@@ -13,6 +13,7 @@ import (
 	"github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/server"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
+    "github.com/Hyperpilotio/k8sconntrack/pkg/iptables"
 
 	"github.com/golang/glog"
 )
@@ -21,6 +22,7 @@ type K8sConntrackServer struct {
 	config             *options.K8sConntrackConfig
 	transactionCounter *transactioncounter.TransactionCounter
 	flowCollector      *flowcollector.FlowCollector
+    iptablesCollector  *iptables.Collector
 }
 
 func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackServer, error) {
@@ -76,6 +78,12 @@ func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackSer
 		flowCollector = flowcollector.NewFlowCollector(c)
 		endpointsConfig.RegisterHandler(flowCollector)
 	}
+	var iptablesCollector *iptables.Collector
+	if config.EnableIptablesCollector {
+		glog.V(3).Infof("Iptables Collector Enabled.")
+		iptablesCollector = iptables.New("filter", []string{"INPUT", "OUTPUT"})
+	}
+
 
 	proxyconfig.NewSourceAPI(
 		kubeClient,
@@ -87,11 +95,12 @@ func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackSer
 		config,
 		transactionCounter,
 		flowCollector,
+        iptablesCollector,
 	}, nil
 }
 
 func (this *K8sConntrackServer) Run() {
-	go server.ListenAndServeProxyServer(this.config.ConntrackBindAddress, this.config.ConntrackPort, this.transactionCounter, this.flowCollector)
+	go server.ListenAndServeProxyServer(this.config.ConntrackBindAddress, this.config.ConntrackPort, this.transactionCounter, this.flowCollector, this.iptablesCollector)
 
 	// Collect transaction and flow information every second.
 	for range time.Tick(1 * time.Second) {

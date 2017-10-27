@@ -6,8 +6,10 @@ import (
 	"net"
 	"net/http"
 
+
 	fcollector "github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
 	tcounter "github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
+	iptables "github.com/Hyperpilotio/k8sconntrack/pkg/iptables"
 
 	"github.com/golang/glog"
 )
@@ -16,14 +18,16 @@ import (
 type Server struct {
 	counter       *tcounter.TransactionCounter
 	flowCollector *fcollector.FlowCollector
+    iptablesCollector *iptables.Collector
 	mux           *http.ServeMux
 }
 
 // NewServer initializes and configures a kubelet.Server object to handle HTTP requests.
-func NewServer(counter *tcounter.TransactionCounter, flowCollector *fcollector.FlowCollector) Server {
+func NewServer(counter *tcounter.TransactionCounter, flowCollector *fcollector.FlowCollector, iptablesCollector *iptables.Collector) Server {
 	server := Server{
 		counter:       counter,
 		flowCollector: flowCollector,
+        iptablesCollector: iptablesCollector,
 		mux:           http.NewServeMux(),
 	}
 	server.InstallDefaultHandlers()
@@ -36,6 +40,7 @@ func (s *Server) InstallDefaultHandlers() {
 	s.mux.HandleFunc("/transactions/count", s.getTransactionsCount)
 	s.mux.HandleFunc("/transactions", s.getAllTransactionsAndReset)
 	s.mux.HandleFunc("/flows", s.getAllFlows)
+	s.mux.HandleFunc("/iptables", s.getIptables)
 }
 
 // ServeHTTP responds to HTTP requests on the Kubelet.
@@ -97,9 +102,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO: For now the address and port number is hardcoded. The actual port number need to be discussed.
-func ListenAndServeProxyServer(bindAddress, bindPort string, counter *tcounter.TransactionCounter, flowCollector *fcollector.FlowCollector) {
+func ListenAndServeProxyServer(bindAddress, bindPort string, counter *tcounter.TransactionCounter, flowCollector *fcollector.FlowCollector, iptablesCollector *iptables.Collector) {
 	glog.V(3).Infof("Start VMT Kube-proxy server")
-	handler := NewServer(counter, flowCollector)
+	handler := NewServer(counter, flowCollector, iptablesCollector)
 	s := &http.Server{
 		Addr:           net.JoinHostPort(bindAddress, bindPort),
 		Handler:        &handler,
@@ -107,3 +112,20 @@ func ListenAndServeProxyServer(bindAddress, bindPort string, counter *tcounter.T
 	}
 	glog.Fatal(s.ListenAndServe())
 }
+
+func (s *Server) getIptables(w http.ResponseWriter, r *http.Request) {
+	if s.iptablesCollector == nil {
+		fmt.Fprintf(w, "Iptables Collector is disabled.")
+		return
+	}
+	iptables := s.iptablesCollector.Stats()
+
+	data, err := json.MarshalIndent(iptables, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+

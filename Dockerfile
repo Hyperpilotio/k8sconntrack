@@ -1,8 +1,11 @@
 # Set the base image
-FROM ubuntu
+FROM ubuntu:16.04
 
 # Set the file maintainer
-MAINTAINER Dongyi Yang <dongyi.yang@vmturbo.com>
+MAINTAINER swh <swh@hsiang.io>
+
+RUN apt-get update && \
+    apt-get install iptables -y
 
 ADD ./_output/conntracker /bin/conntracker
 

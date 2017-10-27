@@ -15,6 +15,7 @@ func init() {
     var err error
     t, err = ipt.New()
     if err != nil {
+        // TODO init glog at other place
         glog.Warningf("failed to init go-iptables err:%+v", err)
     }
     c = New("", []string{""})
@@ -27,11 +28,12 @@ type Chain struct {
 
 type Collector struct {
     Chains  []Chain
+
     Table  string
 }
 
 func New(table string, chains []string) *Collector {
-    c := &Collector{Table: table}
+    c := &Collector{Table: table, Chains: []Chain{}}
     for _, val := range chains {
         c.Chains = append(c.Chains, Chain{Name: val})
     }
@@ -40,6 +42,11 @@ func New(table string, chains []string) *Collector {
 
 func (c *Collector) Stats() error {
     for index := range c.Chains {
+        glog.Error("")
+        glog.Errorf("Total Collector: %+v", c)
+        glog.Errorf("Total Chains: %+v", c.Chains)
+        glog.Errorf("c.Table %s, chain %+v", c.Table, c.Chains[index].Name)
+        glog.Error("")
         data, err := t.Stats(c.Table, c.Chains[index].Name)
         if err != nil {
             glog.Warningf(
