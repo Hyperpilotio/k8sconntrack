@@ -7,11 +7,11 @@ TAG=test
 build: clean
 	go build -o ${BINARY} ./cmd
 
-docker-test:
-	docker build -t ${ORGANIZATION}/${IMAGE}:${TAG} .
-
 docker:
-	docker build -t ${ORGANIZATION}/${IMAGE}:test .
+	docker build -t ${ORGANIZATION}/${IMAGE}:latest .
+
+generate-secret:
+	kubectl create secret generic vmt-config --from-file ~/.kube/config
 
 .PHONY: clean
 clean:
