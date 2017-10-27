@@ -54,7 +54,7 @@ func (c *Collector) Stats() error {
     return nil
 }
 
-func (c *Collector) ToString() string {
+func (c *Collector) String() string {
     return fmt.Sprintf("%+v", *c)
 }
 
