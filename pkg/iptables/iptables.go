@@ -42,11 +42,6 @@ func New(table string, chains []string) *Collector {
 
 func (c *Collector) Stats() error {
     for index := range c.Chains {
-        glog.Error("")
-        glog.Errorf("Total Collector: %+v", c)
-        glog.Errorf("Total Chains: %+v", c.Chains)
-        glog.Errorf("c.Table %s, chain %+v", c.Table, c.Chains[index].Name)
-        glog.Error("")
         data, err := t.Stats(c.Table, c.Chains[index].Name)
         if err != nil {
             glog.Warningf(

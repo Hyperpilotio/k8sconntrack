@@ -118,9 +118,12 @@ func (s *Server) getIptables(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Iptables Collector is disabled.")
 		return
 	}
-	iptables := s.iptablesCollector.Stats()
+	err := s.iptablesCollector.Stats()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
-	data, err := json.MarshalIndent(iptables, "", "  ")
+	data, err := json.MarshalIndent(s.iptablesCollector, "", "  ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
