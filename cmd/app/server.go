@@ -81,7 +81,7 @@ func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackSer
 	var iptablesCollector *iptables.Collector
 	if config.EnableIptablesCollector {
 		glog.V(3).Infof("Iptables Collector Enabled.")
-		iptablesCollector = iptables.New("filter", []string{"INPUT", "OUTPUT"})
+		iptablesCollector = iptables.New()
 	}
 
 

@@ -8,8 +8,11 @@ import (
     ipt "github.com/coreos/go-iptables/iptables"
 )
 
-var t *ipt.IPTables
-var c *Collector
+var (
+    t *ipt.IPTables
+    c *Collector
+    defaultTables = []string{"filter", "nat", "mangle", "raw"}
+)
 
 func init() {
     var err error
@@ -18,43 +21,73 @@ func init() {
         // TODO init glog at other place
         glog.Warningf("failed to init go-iptables err:%+v", err)
     }
-    c = New("", []string{""})
+    c = New()
 }
 
 type Chain struct {
-    Data [][]string
-    Name string
+    Data [][]string     `json:"data"`
+    Name string         `json:"name"`
+}
+
+type Table struct {
+    Chains  []*Chain     `json:"chains"`
+    Name    string      `json:"name"`
 }
 
 type Collector struct {
-    Chains  []Chain
-
-    Table  string
+    Tables  []Table
 }
 
-func New(table string, chains []string) *Collector {
-    c := &Collector{Table: table, Chains: []Chain{}}
-    for _, val := range chains {
-        c.Chains = append(c.Chains, Chain{Name: val})
+func New() *Collector {
+    tables := []Table{}
+    for _, table := range defaultTables {
+        chainList, err := t.ListChains(table)
+        if err != nil {
+
+        }
+        chains := []*Chain{}
+        for _, chainName := range chainList {
+            chains = append(chains, &Chain{Name: chainName})
+        }
+        tables = append(tables, Table{Name: table, Chains: chains})
     }
+
+    c := &Collector{tables}
     return c
 }
 
-func (c *Collector) Stats() error {
-    for index := range c.Chains {
-        data, err := t.Stats(c.Table, c.Chains[index].Name)
+func (c *Collector) ListChains() (map[string][]string, error) {
+    tableMap := map[string][]string{}
+    for _, table := range c.Tables {
+        chains, err := t.ListChains(table.Name)
         if err != nil {
             glog.Warningf(
-                "Unable to collect data from iptables while table=%s chain=%s err=%s",
-                c.Table, c.Chains[index].Name, err.Error())
-            continue
+                "Unable to list chains while table=%s err=%s",
+                table.Name, err.Error())
+            return nil, fmt.Errorf("Unable to list chains while table=%s err=%s", table.Name, err.Error())
         }
-        c.Chains[index].Data = data
+        tableMap[table.Name] = chains
     }
-    return nil
+    return tableMap, nil
 }
 
 func (c *Collector) String() string {
     return fmt.Sprintf("%+v", *c)
+}
+
+func (c *Collector) Stats() error {
+    for _, table := range c.Tables {
+        for _, chain := range table.Chains {
+            data, err := t.Stats(table.Name, chain.Name)
+            if err != nil {
+                glog.Warningf(
+                    "Unable to collect data from iptables while table=%s chain=%s err=%s",
+                    table.Name, chain.Name, err.Error())
+                continue
+            }
+            chain.Data = data
+        }
+    }
+    return nil
 }
 

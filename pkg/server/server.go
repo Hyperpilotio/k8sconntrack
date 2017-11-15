@@ -41,6 +41,7 @@ func (s *Server) InstallDefaultHandlers() {
 	s.mux.HandleFunc("/transactions", s.getAllTransactionsAndReset)
 	s.mux.HandleFunc("/flows", s.getAllFlows)
 	s.mux.HandleFunc("/iptables", s.getIptables)
+	s.mux.HandleFunc("/iptables/chains", s.getAllChains)
 }
 
 // ServeHTTP responds to HTTP requests on the Kubelet.
@@ -123,7 +124,31 @@ func (s *Server) getIptables(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	data, err := json.MarshalIndent(s.iptablesCollector, "", "  ")
+    tableMap := map[string]iptables.Table{}
+    for _, table := range s.iptablesCollector.Tables {
+        tableMap[table.Name] = table
+    }
+
+	data, err := json.MarshalIndent(tableMap, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func (s *Server) getAllChains(w http.ResponseWriter, r *http.Request) {
+	if s.iptablesCollector == nil {
+		fmt.Fprintf(w, "Iptables Collector is disabled.")
+		return
+	}
+	chains, err := s.iptablesCollector.ListChains()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	data, err := json.MarshalIndent(chains, "", "  ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
