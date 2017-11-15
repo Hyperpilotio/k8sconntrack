@@ -6,29 +6,28 @@ import (
 	"net"
 	"net/http"
 
-
 	fcollector "github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
-	tcounter "github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
 	iptables "github.com/Hyperpilotio/k8sconntrack/pkg/iptables"
+	tcounter "github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
 
 	"github.com/golang/glog"
 )
 
 // Server is a http.Handler which exposes kubelet functionality over HTTP.
 type Server struct {
-	counter       *tcounter.TransactionCounter
-	flowCollector *fcollector.FlowCollector
-    iptablesCollector *iptables.Collector
-	mux           *http.ServeMux
+	counter           *tcounter.TransactionCounter
+	flowCollector     *fcollector.FlowCollector
+	iptablesCollector *iptables.Collector
+	mux               *http.ServeMux
 }
 
 // NewServer initializes and configures a kubelet.Server object to handle HTTP requests.
 func NewServer(counter *tcounter.TransactionCounter, flowCollector *fcollector.FlowCollector, iptablesCollector *iptables.Collector) Server {
 	server := Server{
-		counter:       counter,
-		flowCollector: flowCollector,
-        iptablesCollector: iptablesCollector,
-		mux:           http.NewServeMux(),
+		counter:           counter,
+		flowCollector:     flowCollector,
+		iptablesCollector: iptablesCollector,
+		mux:               http.NewServeMux(),
 	}
 	server.InstallDefaultHandlers()
 	return server
@@ -39,6 +38,7 @@ func (s *Server) InstallDefaultHandlers() {
 	s.mux.HandleFunc("/", handler)
 	s.mux.HandleFunc("/transactions/count", s.getTransactionsCount)
 	s.mux.HandleFunc("/transactions", s.getAllTransactionsAndReset)
+	s.mux.HandleFunc("/chains", s.getAllChains)
 	s.mux.HandleFunc("/flows", s.getAllFlows)
 	s.mux.HandleFunc("/iptables", s.getIptables)
 	s.mux.HandleFunc("/iptables/chains", s.getAllChains)
@@ -156,4 +156,3 @@ func (s *Server) getAllChains(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
-
