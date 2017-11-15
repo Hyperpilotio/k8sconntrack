@@ -12,6 +12,8 @@ docker:
 
 generate-secret:
 	kubectl create secret generic vmt-config --from-file ~/.kube/config
+test:
+	${ENVS} go test ./...
 
 .PHONY: clean
 clean:

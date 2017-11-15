@@ -1,6 +1,7 @@
 package transactioncounter
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -24,14 +25,14 @@ type TransactionCounter struct {
 	endpointsMap map[string]*endpointsInfo
 
 	// key is service name, value is the transaction related to it.
-	counter map[string]map[string]int
+	counter map[string]map[string]EndpointAbsCounter
 
 	lastPollTimestamp uint64
 }
 
 func NewTransactionCounter(conntrack *conntrack.ConnTrack) *TransactionCounter {
 	return &TransactionCounter{
-		counter:   make(map[string]map[string]int),
+		counter:   make(map[string]map[string]EndpointAbsCounter),
 		conntrack: conntrack,
 
 		endpointsMap: make(map[string]*endpointsInfo),
@@ -68,7 +69,7 @@ func (this *TransactionCounter) OnEndpointsUpdate(allEndpoints []api.Endpoints) 
 // Clear the transaction counter map.
 func (tc *TransactionCounter) Reset() {
 	glog.V(3).Infof("Inside reset transaction counter")
-	counterMap := make(map[string]map[string]int)
+	counterMap := make(map[string]map[string]EndpointAbsCounter)
 
 	tc.counter = counterMap
 
@@ -87,16 +88,21 @@ func (tc *TransactionCounter) Count(infos []*countInfo) {
 		if !ok {
 			glog.V(4).Infof("Service %s is not tracked. Now initializing in map", serviceName)
 
-			epMap = make(map[string]int)
+			epMap = make(map[string]EndpointAbsCounter)
 		}
-		count, ok := epMap[endpointAddress]
+		// count, ok := epMap[endpointAddress]
+		epCollector, ok := epMap[endpointAddress]
 		if !ok {
 			glog.V(4).Infof("Endpoint %s for Service %s is not tracked. Now initializing in map", endpointAddress, serviceName)
-			count = 0
+			epCollector = EndpointAbsCounter{}
+			epCollector.Role = info.role
 		}
-		epMap[endpointAddress] = count + 1
+		epCollector.Counts = epCollector.Counts + 1
+		epCollector.Bytes = epCollector.Bytes + info.bytes
+		epCollector.Packets = epCollector.Packets + info.packets
+		epMap[endpointAddress] = epCollector
 		tc.counter[serviceName] = epMap
-		glog.V(4).Infof("Transaction count of %s is %d.", endpointAddress, epMap[endpointAddress])
+		glog.V(4).Infof("Transaction count of %s is %+v", endpointAddress, epMap[endpointAddress])
 	}
 }
 
@@ -114,10 +120,23 @@ func (tc *TransactionCounter) GetAllTransactions() []*Transaction {
 
 	for svcName, epMap := range tc.counter {
 		// Before append, change count to count per second.
-		valueMap := make(map[string]float64)
-		countMap := make(map[string]int)
-		for ep, count := range epMap {
-			valueMap[ep] = float64(count) / float64(timeDiff)
+		valueMap := make(map[string]EndpointCounter)
+		countMap := make(map[string]EndpointAbsCounter)
+		for ep, epCounter := range epMap {
+			value := EndpointCounter{
+				Counts:  float64(epCounter.Counts) / float64(timeDiff),
+				Bytes:   float64(epCounter.Bytes) / float64(timeDiff),
+				Packets: float64(epCounter.Packets) / float64(timeDiff),
+				Role:    epCounter.Role,
+			}
+			valueMap[ep] = value
+
+			count := EndpointAbsCounter{
+				Counts:  epCounter.Counts,
+				Bytes:   epCounter.Bytes,
+				Packets: epCounter.Packets,
+				Role:    epCounter.Role,
+			}
 			countMap[ep] = count
 		}
 		transaction := &Transaction{
@@ -154,16 +173,19 @@ func (this *TransactionCounter) syncConntrack() {
 type countInfo struct {
 	serviceName     string
 	endpointAddress string
+	bytes           uint64
+	packets         uint64
+	role            string
 }
 
 // Filter out connection does not have endpoints address as either Local or Remote Address
 func (this *TransactionCounter) preProcessConnections(c conntrack.ConntrackInfo) []*countInfo {
 	var infos []*countInfo
 	if svcName, exist := this.endpointsMap[c.Src.String()]; exist {
-		infos = append(infos, &countInfo{svcName.String(), c.Src.String()})
+		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Src.String(), c.SrcPort), c.Bytes, c.Packets, "courier"})
 	}
 	if svcName, exist := this.endpointsMap[c.Dst.String()]; exist {
-		infos = append(infos, &countInfo{svcName.String(), c.Dst.String()})
+		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Dst.String(), c.DstPort), c.Bytes, c.Packets, "recipient"})
 	}
 	return infos
 
