@@ -11,9 +11,9 @@ import (
 	"github.com/Hyperpilotio/k8sconntrack/cmd/app/options"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/conntrack"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/flowcollector"
+	"github.com/Hyperpilotio/k8sconntrack/pkg/iptables"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/server"
 	"github.com/Hyperpilotio/k8sconntrack/pkg/transactioncounter"
-    "github.com/Hyperpilotio/k8sconntrack/pkg/iptables"
 
 	"github.com/golang/glog"
 )
@@ -22,7 +22,7 @@ type K8sConntrackServer struct {
 	config             *options.K8sConntrackConfig
 	transactionCounter *transactioncounter.TransactionCounter
 	flowCollector      *flowcollector.FlowCollector
-    iptablesCollector  *iptables.Collector
+	iptablesCollector  *iptables.Collector
 }
 
 func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackServer, error) {
@@ -84,7 +84,6 @@ func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackSer
 		iptablesCollector = iptables.New()
 	}
 
-
 	proxyconfig.NewSourceAPI(
 		kubeClient,
 		time.Second*10,
@@ -95,7 +94,7 @@ func NewK8sConntrackServer(config *options.K8sConntrackConfig) (*K8sConntrackSer
 		config,
 		transactionCounter,
 		flowCollector,
-        iptablesCollector,
+		iptablesCollector,
 	}, nil
 }
 

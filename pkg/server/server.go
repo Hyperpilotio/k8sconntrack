@@ -124,10 +124,10 @@ func (s *Server) getIptables(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-    tableMap := map[string]iptables.Table{}
-    for _, table := range s.iptablesCollector.Tables {
-        tableMap[table.Name] = table
-    }
+	tableMap := map[string]iptables.Table{}
+	for _, table := range s.iptablesCollector.Tables {
+		tableMap[table.Name] = table
+	}
 
 	data, err := json.MarshalIndent(tableMap, "", "  ")
 	if err != nil {
