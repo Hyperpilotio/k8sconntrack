@@ -2,15 +2,15 @@ package transactioncounter
 
 type EndpointCounter struct {
 	Counts  float64 `json:"count,omitempty"`
-	Bytes   float64 `json:"bytes,omitempty"`
-	Packets float64 `json:"packets,omitempty"`
+	Bytes   float64 `json:"bytes"`
+	Packets float64 `json:"packets"`
 	Role    string  `json:"role,omitempty"`
 }
 
 type EndpointAbsCounter struct {
 	Counts  uint64 `json:"count,omitempty"`
-	Bytes   uint64 `json:"bytes,omitempty"`
-	Packets uint64 `json:"packets,omitempty"`
+	Bytes   uint64 `json:"bytes"`
+	Packets uint64 `json:"packets"`
 	Role    string `json:"role,omitempty"`
 }
 

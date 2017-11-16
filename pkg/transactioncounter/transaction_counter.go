@@ -95,11 +95,13 @@ func (tc *TransactionCounter) Count(infos []*countInfo) {
 		if !ok {
 			glog.V(4).Infof("Endpoint %s for Service %s is not tracked. Now initializing in map", endpointAddress, serviceName)
 			epCollector = EndpointAbsCounter{}
-			epCollector.Role = info.role
 		}
-		epCollector.Counts = epCollector.Counts + 1
-		epCollector.Bytes = epCollector.Bytes + info.bytes
-		epCollector.Packets = epCollector.Packets + info.packets
+		epCollector = EndpointAbsCounter{
+			Counts:  epCollector.Counts + 1,
+			Bytes:   epCollector.Bytes + info.bytes,
+			Packets: epCollector.Packets + info.packets,
+			Role:    info.role,
+		}
 		epMap[endpointAddress] = epCollector
 		tc.counter[serviceName] = epMap
 		glog.V(4).Infof("Transaction count of %s is %+v", endpointAddress, epMap[endpointAddress])
@@ -182,10 +184,10 @@ type countInfo struct {
 func (this *TransactionCounter) preProcessConnections(c conntrack.ConntrackInfo) []*countInfo {
 	var infos []*countInfo
 	if svcName, exist := this.endpointsMap[c.Src.String()]; exist {
-		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Src.String(), c.SrcPort), c.Bytes, c.Packets, "courier"})
+		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Src.String(), c.SrcPort), c.Bytes, c.Packets, "sender"})
 	}
 	if svcName, exist := this.endpointsMap[c.Dst.String()]; exist {
-		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Dst.String(), c.DstPort), c.Bytes, c.Packets, "recipient"})
+		infos = append(infos, &countInfo{svcName.String(), fmt.Sprintf("%s:%v", c.Dst.String(), c.DstPort), c.Bytes, c.Packets, "receiver"})
 	}
 	return infos
 
